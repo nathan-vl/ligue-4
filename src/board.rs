@@ -83,29 +83,30 @@ impl Board {
     }
 
     pub fn print(&self) {
-        print!("#");
+        print!("-");
         for i in 0..self.tiles[0].len() {
             print!("{}", i + 1);
         }
-        print!("#");
-        println!();
+        println!("-");
 
-        for _ in 0..self.tiles[0].len() + 2 {
-            print!("#");
+        print!("╔");
+        for _ in 0..self.tiles[0].len() {
+            print!("═");
         }
-        println!();
+        println!("╗");
 
         for row in self.tiles {
-            print!("#");
+            print!("║");
             for tile in row {
                 print!("{}", Tile::display_tile(&tile));
             }
-            println!("#");
+            println!("║");
         }
 
-        for _ in 0..self.tiles[0].len() + 2 {
-            print!("#");
+        print!("╚");
+        for _ in 0..self.tiles[0].len() {
+            print!("═");
         }
-        println!();
+        println!("╝");
     }
 }
