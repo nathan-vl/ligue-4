@@ -10,7 +10,7 @@ impl Board {
             tiles: [[None; 7]; 6],
         }
     }
-    
+
     pub fn place_tile(&mut self, column: usize, tile: &Tile) -> Option<(usize, usize)> {
         for (y, row) in self.tiles.iter_mut().enumerate().rev() {
             if row[column].is_none() {
@@ -98,7 +98,11 @@ impl Board {
         for row in self.tiles {
             print!("║");
             for tile in row {
-                print!("{}", Tile::display_tile(&tile));
+                if let Some(tile) = tile {
+                    print!("{}", tile);
+                } else {
+                    print!(" ");
+                }
             }
             println!("║");
         }
