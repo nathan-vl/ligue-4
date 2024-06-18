@@ -46,11 +46,7 @@ fn main() {
                 break;
             }
 
-            if current_player == Tile::Player1 {
-                current_player = Tile::Player2;
-            } else {
-                current_player = Tile::Player1;
-            }
+            current_player = current_player.opposite();
         }
     }
 }
