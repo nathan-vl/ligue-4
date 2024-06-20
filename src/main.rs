@@ -1,12 +1,21 @@
 mod board;
+mod game_room;
 mod tile;
+mod server;
+mod request;
+mod client;
+mod response;
 
-use std::io::{stdin, stdout, Write};
+use std::{
+    env, io::{stdin, stdout, Write}, net::TcpListener
+};
 
 use board::Board;
+use client::Client;
+use server::{Server, PORT};
 use tile::Tile;
 
-fn main() {
+fn game() {
     let mut board = Board::new();
 
     let mut current_player = Tile::Player1;
@@ -48,5 +57,23 @@ fn main() {
 
             current_player = current_player.opposite();
         }
+    }
+}
+
+/*
+- Vazia: lista de salas ou criar sala
+- Entrar em sala
+- Jogada da partida
+- Rematch
+*/
+
+fn main() {
+    let args: Vec<String> = env::args().collect();
+    if args.len() == 1 {
+        let mut server = Server::new();
+        server.listen();
+    } else {
+        let mut client = Client::new("127.0.0.1");
+        client.join_game();
     }
 }
