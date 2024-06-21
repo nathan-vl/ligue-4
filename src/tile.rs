@@ -1,6 +1,8 @@
 use std::fmt::Display;
 
-#[derive(Clone, Copy, Debug, PartialEq)]
+use serde::{Deserialize, Serialize};
+
+#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
 pub enum Tile {
     Player1,
     Player2,
@@ -12,6 +14,13 @@ impl Tile {
             Tile::Player2
         } else {
             Tile::Player1
+        }
+    }
+
+    pub fn to_number(self) -> u8 {
+        match self {
+            Tile::Player1 => 1,
+            Tile::Player2 => 2,
         }
     }
 }

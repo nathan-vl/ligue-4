@@ -1,6 +1,8 @@
+use serde::{Deserialize, Serialize};
+
 use crate::tile::Tile;
 
-#[derive(Debug)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Board {
     tiles: [[Option<Tile>; 7]; 6],
 }
@@ -22,7 +24,14 @@ impl Board {
         None
     }
 
-    pub fn check_row(&self, tile: &Tile, row: usize) -> bool {
+    pub fn check_win(&self, tile: &Tile, x: usize, y: usize) -> bool {
+        self.check_column(tile, x)
+            || self.check_row(tile, y)
+            || self.check_direct_diagonal(tile)
+            || self.check_inverse_diagonal(tile)
+    }
+
+    fn check_row(&self, tile: &Tile, row: usize) -> bool {
         const SLICE_SIZE: usize = 4;
         for x in 0..self.tiles[0].len() - SLICE_SIZE {
             let slice = &self.tiles[row][x..x + SLICE_SIZE];
@@ -35,7 +44,7 @@ impl Board {
         false
     }
 
-    pub fn check_column(&self, tile: &Tile, column: usize) -> bool {
+    fn check_column(&self, tile: &Tile, column: usize) -> bool {
         const SLICE_SIZE: usize = 4;
         for y in 0..self.tiles[0].len() - SLICE_SIZE {
             let slice = [
@@ -53,7 +62,7 @@ impl Board {
         false
     }
 
-    pub fn check_direct_diagonal(&self, tile: &Tile) -> bool {
+    fn check_direct_diagonal(&self, tile: &Tile) -> bool {
         const SLICE_SIZE: usize = 4;
         for y in 0..self.tiles.len() - SLICE_SIZE {
             for x in 0..self.tiles[0].len() - SLICE_SIZE {
@@ -68,7 +77,7 @@ impl Board {
         false
     }
 
-    pub fn check_inverse_diagonal(&self, tile: &Tile) -> bool {
+    fn check_inverse_diagonal(&self, tile: &Tile) -> bool {
         const SLICE_SIZE: usize = 4;
         for y in 0..self.tiles.len() - SLICE_SIZE {
             for x in (SLICE_SIZE - 1)..self.tiles[0].len() {

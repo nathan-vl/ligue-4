@@ -1,9 +1,6 @@
-use std::{
-    io::Result,
-    net::{TcpListener, TcpStream},
-};
+use std::net::{TcpListener, TcpStream};
 
-use crate::{game_room::GameRoom, request::Request, response::Response, utils};
+use crate::{game::Game, game_room::GameRoom, request::Request, response::Response, utils};
 
 pub const PORT: u16 = 6010;
 
@@ -21,6 +18,31 @@ impl Server {
         }
     }
 
+    fn handle_new_player(stream: TcpStream, rooms: &mut Vec<GameRoom>) {
+        let mut available_rooms = GameRoom::available_rooms(rooms);
+        if available_rooms.is_empty() {
+            let mut room: GameRoom = GameRoom::new(stream);
+            Server::send_response(&mut room.player1, Response::PlayerCreatedRoom);
+            rooms.push(room);
+        } else {
+            let room = &mut available_rooms[0];
+            room.player2 = Some(stream);
+
+            room.game = Some(Game::new());
+
+            let board = &room.game.as_ref().unwrap().board;
+
+            Server::send_response(
+                &mut room.player1,
+                Response::AnotherPlayerJoinedRoom { board: board.clone() },
+            );
+            Server::send_response(
+                room.player2.as_mut().unwrap(),
+                Response::PlayerEnteredRoom { board: board.clone() },
+            );
+        }
+    }
+
     pub fn listen(&mut self) {
         println!("Listening at {}", self.listener.local_addr().unwrap());
         for stream in self.listener.incoming() {
@@ -28,30 +50,8 @@ impl Server {
             let request = Server::read_request(&mut stream);
 
             match request {
-                Request::NewPlayer => {
-                    let mut available_rooms = GameRoom::available_rooms(&mut self.rooms);
-                    if available_rooms.is_empty() {
-                        Server::send_response(
-                            &mut stream,
-                            &Response::JoinedRoom {
-                                message: "Created room".to_owned(),
-                            },
-                        );
-
-                        let room = GameRoom::new(stream);
-                        self.rooms.push(room);
-                    } else {
-                        Server::send_response(
-                            &mut stream,
-                            &Response::JoinedRoom {
-                                message: "Joined room".to_owned(),
-                            },
-                        );
-
-                        available_rooms[0].player2 = Some(stream);
-                    }
-                }
-                Request::Play { column: _ } => todo!(),
+                Request::NewPlayer => Server::handle_new_player(stream, &mut self.rooms),
+                Request::Play { column: _ } => todo!("Server REQ Play"),
             }
         }
     }
@@ -60,7 +60,7 @@ impl Server {
         utils::read(stream).unwrap()
     }
 
-    fn send_response(stream: &mut TcpStream, response: &Response) {
-        utils::send(stream, response).unwrap();
+    fn send_response(stream: &mut TcpStream, response: Response) {
+        utils::send(stream, &response).unwrap();
     }
 }

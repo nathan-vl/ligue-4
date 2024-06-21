@@ -1,22 +1,20 @@
 use std::net::TcpStream;
 
-use crate::{board::Board, tile::Tile};
+use crate::game::Game;
 
-#[derive(Debug)]
 pub struct GameRoom {
-    pub board: Board,
-    current_player: Tile,
     pub player1: TcpStream,
     pub player2: Option<TcpStream>,
+
+    pub game: Option<Game>,
 }
 
 impl GameRoom {
     pub fn new(player1: TcpStream) -> Self {
         Self {
-            board: Board::new(),
-            current_player: Tile::Player1,
             player1,
             player2: None,
+            game: None,
         }
     }
 

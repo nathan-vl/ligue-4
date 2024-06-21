@@ -28,5 +28,6 @@ fn main() {
     } else {
         let mut client = Client::new("127.0.0.1");
         client.join_game();
+        client.play();
     }
 }

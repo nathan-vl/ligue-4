@@ -1,8 +1,14 @@
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize, Debug)]
+use crate::{board::Board, tile::Tile};
+
+#[derive(Deserialize, Debug, Serialize)]
 
 pub enum Response {
-    JoinedRoom { message: String },
-    CurrentGameState,
+    PlayerCreatedRoom,
+
+    PlayerEnteredRoom { board: Board },
+    AnotherPlayerJoinedRoom { board: Board },
+
+    CurrentGameState { board: Board, current_player: Tile },
 }

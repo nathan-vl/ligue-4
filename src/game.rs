@@ -2,8 +2,8 @@ use std::io::{stdin, stdout, Write};
 
 use crate::{board::Board, tile::Tile};
 
-struct Game {
-    board: Board,
+pub struct Game {
+    pub board: Board,
     current_player: Tile,
 }
 
@@ -39,11 +39,7 @@ fn play() {
         println!();
 
         if let Some(dest) = board.place_tile(col as usize, &current_player) {
-            if board.check_column(&current_player, dest.0)
-                || board.check_row(&current_player, dest.1)
-                || board.check_direct_diagonal(&current_player)
-                || board.check_inverse_diagonal(&current_player)
-            {
+            if board.check_win(&current_player, dest.0, dest.1) {
                 println!(
                     "O jogador {} ganhou. Resultado:",
                     if current_player == Tile::Player1 {
