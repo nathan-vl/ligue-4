@@ -1,9 +1,9 @@
 use std::{
-    io::Read,
+    io::Result,
     net::{TcpListener, TcpStream},
 };
 
-use crate::{game_room::GameRoom, request::Request};
+use crate::{game_room::GameRoom, request::Request, response::Response, utils};
 
 pub const PORT: u16 = 6010;
 
@@ -16,7 +16,7 @@ impl Server {
     pub fn new() -> Self {
         let addr = format!("0.0.0.0:{PORT}");
         Self {
-            listener: TcpListener::bind(&addr).unwrap(),
+            listener: TcpListener::bind(addr).unwrap(),
             rooms: vec![],
         }
     }
@@ -25,24 +25,42 @@ impl Server {
         println!("Listening at {}", self.listener.local_addr().unwrap());
         for stream in self.listener.incoming() {
             let mut stream = stream.unwrap();
-            Server::handle_connection(&mut stream);
+            let request = Server::read_request(&mut stream);
+
+            match request {
+                Request::NewPlayer => {
+                    let mut available_rooms = GameRoom::available_rooms(&mut self.rooms);
+                    if available_rooms.is_empty() {
+                        Server::send_response(
+                            &mut stream,
+                            &Response::JoinedRoom {
+                                message: "Created room".to_owned(),
+                            },
+                        );
+
+                        let room = GameRoom::new(stream);
+                        self.rooms.push(room);
+                    } else {
+                        Server::send_response(
+                            &mut stream,
+                            &Response::JoinedRoom {
+                                message: "Joined room".to_owned(),
+                            },
+                        );
+
+                        available_rooms[0].player2 = Some(stream);
+                    }
+                }
+                Request::Play { column: _ } => todo!(),
+            }
         }
     }
 
-    fn handle_connection(connection: &mut TcpStream) {
-        println!("---\nIncoming ---");
-        let request = Server::read_request(connection);
-        println!("{:?}", request);
-        println!("--- End ---");
+    fn read_request(stream: &mut TcpStream) -> Request {
+        utils::read(stream).unwrap()
     }
 
-    fn read_request(connection: &mut TcpStream) -> Request {
-        let mut buf: [u8; 1024] = [0; 1024];
-        connection.read(&mut buf).unwrap();
-
-        serde_json::from_value(
-            serde_json::to_value(&String::from_utf8(buf.to_vec()).unwrap()).unwrap(),
-        )
-        .unwrap()
+    fn send_response(stream: &mut TcpStream, response: &Response) {
+        utils::send(stream, response).unwrap();
     }
 }

@@ -1,4 +1,8 @@
+use serde::{Deserialize, Serialize};
+
+#[derive(Serialize, Deserialize, Debug)]
+
 pub enum Response {
-    WaitingRoom,
+    JoinedRoom { message: String },
     CurrentGameState,
 }

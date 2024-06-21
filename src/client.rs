@@ -1,6 +1,6 @@
-use std::{io::{Result, Write}, net::TcpStream};
+use std::{io::Result, net::TcpStream};
 
-use crate::{request::Request, server::PORT};
+use crate::{request::Request, response::Response, server::PORT, utils};
 
 pub struct Client {
     stream: TcpStream,
@@ -14,13 +14,16 @@ impl Client {
     }
 
     pub fn join_game(&mut self) {
-        self.send_request(&Request::New).unwrap();
+        self.send_request(&Request::NewPlayer).unwrap();
+        let response = self.read_response();
+        println!("{:?}", response);
     }
 
     fn send_request(&mut self, request: &Request) -> Result<()> {
-        let request_str = serde_json::to_string(request)?;
-        println!("--- SEND:{request_str}");
-        self.stream.write(request_str.as_bytes())?;
-        Ok(())
+        utils::send(&mut self.stream, request)
+    }
+
+    fn read_response(&mut self) -> Response {
+        utils::read(&mut self.stream).unwrap()
     }
 }

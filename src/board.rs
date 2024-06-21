@@ -1,5 +1,6 @@
 use crate::tile::Tile;
 
+#[derive(Debug)]
 pub struct Board {
     tiles: [[Option<Tile>; 7]; 6],
 }
