@@ -18,10 +18,13 @@ impl GameRoom {
         }
     }
 
-    pub fn available_rooms(rooms: &mut [GameRoom]) -> Vec<&mut GameRoom> {
-        rooms
-            .iter_mut()
-            .filter(|room| room.player2.is_none())
-            .collect()
+    pub fn first_available_room(rooms: &mut Vec<GameRoom>) -> Option<GameRoom> {
+        for (i, room) in rooms.iter_mut().enumerate() {
+            if room.player2.is_none() {
+                let r = rooms.remove(i);
+                return Some(r);
+            }
+        }
+        None
     }
 }

@@ -5,10 +5,15 @@ use crate::{board::Board, tile::Tile};
 #[derive(Deserialize, Debug, Serialize)]
 
 pub enum Response {
-    PlayerCreatedRoom,
+    CreatedRoom,
 
-    PlayerEnteredRoom { board: Board },
-    AnotherPlayerJoinedRoom { board: Board },
+    JoinedRoom { player_tile: Tile },
+    AnotherPlayerJoinedRoom { player_tile: Tile },
 
-    CurrentGameState { board: Board, current_player: Tile },
+    AskTurn { board: Board },
+    AnotherPlayerTurn { board: Board },
+
+    PlayerWin { board: Board },
+    PlayerLost { board: Board },
+    Draw { board: Board },
 }

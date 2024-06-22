@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::tile::Tile;
 
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Copy, Debug, Deserialize, Serialize)]
 pub struct Board {
     tiles: [[Option<Tile>; 7]; 6],
 }

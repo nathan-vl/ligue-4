@@ -13,16 +13,12 @@ pub fn read<T: for<'a> Deserialize<'a>>(stream: &mut TcpStream) -> Result<T> {
     let buf = String::from_utf8_lossy(&buf);
     let value = serde_json::from_str(&buf)?;
 
-    print!("READ: {buf}");
-
     Ok(value)
 }
 
 pub fn send<T: Serialize>(stream: &mut TcpStream, message: &T) -> Result<()> {
     let message_str = serde_json::to_string(message)? + "\n";
     stream.write_all(message_str.as_bytes())?;
-
-    print!("SEND: {message_str}");
 
     Ok(())
 }
