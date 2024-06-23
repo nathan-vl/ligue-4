@@ -83,6 +83,21 @@ impl Server {
                             _ = player2.shutdown(Shutdown::Both);
                             println!("Jogo acabou");
                             return;
+                        } else if game.board.check_tie(){
+                            
+                            Self::send_response(
+                                &mut player1,
+                                Response::Draw {board: game.board}
+                            );
+                            Self::send_response(
+                                &mut player2,
+                                Response::Draw {board: game.board}
+                            );
+
+                            _ = player1.shutdown(Shutdown::Both);
+                            _ = player2.shutdown(Shutdown::Both);
+                            println!("Jogo empatou, ninguém venceu");
+                            return;
                         }
                     } else {
                         panic!("Invalid position");
