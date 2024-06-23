@@ -16,4 +16,7 @@ pub enum Response {
     PlayerWin { board: Board },
     PlayerLost { board: Board },
     Draw { board: Board },
+
+    OtherPlayerDisconnected,
+    InvalidRequest { message: String },
 }

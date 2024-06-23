@@ -30,9 +30,9 @@ impl Client {
             self.handle_response(&response);
 
             match response {
-                Response::PlayerWin { board: _ } => break 'game,
-                Response::PlayerLost { board: _ } => break 'game,
-                Response::Draw { board: _ } => break 'game,
+                Response::PlayerWin { board: _ }
+                | Response::PlayerLost { board: _ }
+                | Response::OtherPlayerDisconnected => break 'game,
                 _ => {}
             }
         }
@@ -86,10 +86,16 @@ impl Client {
                 board.print();
                 println!("Fim de jogo. Você perdeu.");
             }
-            Response::Draw { board} => {
+            Response::Draw { board } => {
                 board.print();
                 println!("Fim de jogo. Foi um empate.");
-            },
+            }
+            Response::InvalidRequest { message } => {
+                println!("Requisição inválida: {message}");
+            }
+            Response::OtherPlayerDisconnected => {
+                println!("O outro jogador saiu da sala.");
+            }
         }
     }
 

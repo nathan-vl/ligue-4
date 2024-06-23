@@ -47,7 +47,7 @@ impl Board {
     pub fn check_tie(&self) -> bool {
         for tile in &self.tiles[0] {
             if tile.is_none() {
-                return false; 
+                return false;
             }
         }
 

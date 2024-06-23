@@ -1,4 +1,8 @@
-use std::net::{Shutdown, TcpListener, TcpStream};
+use std::{
+    io::Result,
+    net::{Shutdown, TcpListener, TcpStream},
+    thread,
+};
 
 use crate::{
     game::Game,
@@ -26,81 +30,77 @@ impl Server {
     }
 
     fn handle_game(mut player1: TcpStream, mut player2: TcpStream) {
-        println!("Jogo iniciou");
         let mut game = Game::new();
 
-        // TODO: Check draw
         loop {
-            let current_player_request = if game.current_player == Tile::Player1 {
-                Server::send_response(
-                    &mut player2,
-                    Response::AnotherPlayerTurn { board: game.board },
-                );
-
-                Server::send_response(&mut player1, Response::AskTurn { board: game.board });
-                Server::read_request(&mut player1)
+            let (current_player, other_player) = if game.current_player == Tile::Player1 {
+                (&mut player1, &mut player2)
             } else {
-                Server::send_response(
-                    &mut player1,
-                    Response::AnotherPlayerTurn { board: game.board },
-                );
-
-                Server::send_response(&mut player2, Response::AskTurn { board: game.board });
-                Server::read_request(&mut player2)
+                (&mut player2, &mut player1)
             };
 
+            Server::send_response(
+                other_player,
+                Response::AnotherPlayerTurn { board: game.board },
+            )
+            .unwrap();
+
+            Server::send_response(current_player, Response::AskTurn { board: game.board }).unwrap();
+            let current_player_request = Server::read_request(current_player);
+
             match current_player_request {
-                Request::NewPlayer => panic!("Invalid request"),
-                Request::Play { column } => {
-                    if let Some(tile_pos) =
-                        game.board.place_tile(column as usize, &game.current_player)
-                    {
-                        if game
-                            .board
-                            .check_win(&game.current_player, tile_pos.0, tile_pos.1)
+                Ok(request) => match request {
+                    Request::Play { column } => {
+                        if let Some(tile_pos) =
+                            game.board.place_tile(column as usize, &game.current_player)
                         {
-                            if game.current_player == Tile::Player1 {
+                            if game
+                                .board
+                                .check_win(&game.current_player, tile_pos.0, tile_pos.1)
+                            {
+                                Self::send_response(
+                                    current_player,
+                                    Response::PlayerWin { board: game.board },
+                                )
+                                .unwrap();
+                                Self::send_response(
+                                    other_player,
+                                    Response::PlayerLost { board: game.board },
+                                )
+                                .unwrap();
+
+                                _ = player1.shutdown(Shutdown::Both);
+                                _ = player2.shutdown(Shutdown::Both);
+                                println!("Jogo acabou");
+                                return;
+                            } else if game.board.check_tie() {
                                 Self::send_response(
                                     &mut player1,
-                                    Response::PlayerWin { board: game.board },
-                                );
+                                    Response::Draw { board: game.board },
+                                )
+                                .unwrap();
                                 Self::send_response(
                                     &mut player2,
-                                    Response::PlayerLost { board: game.board },
-                                );
-                            } else {
-                                Self::send_response(
-                                    &mut player1,
-                                    Response::PlayerLost { board: game.board },
-                                );
-                                Self::send_response(
-                                    &mut player2,
-                                    Response::PlayerWin { board: game.board },
-                                );
+                                    Response::Draw { board: game.board },
+                                )
+                                .unwrap();
+
+                                _ = player1.shutdown(Shutdown::Both);
+                                _ = player2.shutdown(Shutdown::Both);
+                                println!("Jogo empatou, ninguém venceu");
+                                return;
                             }
-
-                            _ = player1.shutdown(Shutdown::Both);
-                            _ = player2.shutdown(Shutdown::Both);
-                            println!("Jogo acabou");
-                            return;
-                        } else if game.board.check_tie(){
-                            
-                            Self::send_response(
-                                &mut player1,
-                                Response::Draw {board: game.board}
-                            );
-                            Self::send_response(
-                                &mut player2,
-                                Response::Draw {board: game.board}
-                            );
-
-                            _ = player1.shutdown(Shutdown::Both);
-                            _ = player2.shutdown(Shutdown::Both);
-                            println!("Jogo empatou, ninguém venceu");
-                            return;
+                        } else {
+                            panic!("Invalid position");
                         }
-                    } else {
-                        panic!("Invalid position");
+                    }
+                    _ => panic!("Requisição inválida"),
+                },
+                Err(e) => {
+                    if e.kind() == std::io::ErrorKind::UnexpectedEof {
+                        Server::send_response(other_player, Response::OtherPlayerDisconnected)
+                            .unwrap();
+                        return;
                     }
                 }
             };
@@ -121,18 +121,22 @@ impl Server {
                     Response::AnotherPlayerJoinedRoom {
                         player_tile: Tile::Player1,
                     },
-                );
+                )
+                .unwrap();
                 Server::send_response(
                     room.player2.as_mut().unwrap(),
                     Response::JoinedRoom {
                         player_tile: Tile::Player2,
                     },
-                );
+                )
+                .unwrap();
 
-                Server::handle_game(room.player1, room.player2.unwrap());
+                thread::spawn(|| {
+                    Server::handle_game(room.player1, room.player2.unwrap());
+                });
             }
             None => {
-                Server::send_response(&mut stream, Response::CreatedRoom);
+                Server::send_response(&mut stream, Response::CreatedRoom).unwrap();
                 let room = GameRoom::new(stream);
                 rooms.push(room);
             }
@@ -140,23 +144,32 @@ impl Server {
     }
 
     pub fn listen(&mut self) {
-        println!("Listening at {}", self.listener.local_addr().unwrap());
+        println!(
+            "Servidor ligado no endereço {}.",
+            self.listener.local_addr().unwrap()
+        );
         for stream in self.listener.incoming() {
             let mut stream = stream.unwrap();
-            let request = Server::read_request(&mut stream);
+            let request = Server::read_request(&mut stream).unwrap();
 
             match request {
                 Request::NewPlayer => Server::handle_new_player(stream, &mut self.rooms),
-                Request::Play { column: _ } => todo!("Server REQ Play"),
+                _ => Server::send_response(
+                    &mut stream,
+                    Response::InvalidRequest {
+                        message: "É necessário entrar em uma sala para fazer uma jogada".to_owned(),
+                    },
+                )
+                .unwrap(),
             }
         }
     }
 
-    fn read_request(stream: &mut TcpStream) -> Request {
-        utils::read(stream).unwrap()
+    fn read_request(stream: &mut TcpStream) -> Result<Request> {
+        utils::read(stream)
     }
 
-    fn send_response(stream: &mut TcpStream, response: Response) {
-        utils::send(stream, &response).unwrap();
+    fn send_response(stream: &mut TcpStream, response: Response) -> Result<()> {
+        utils::send(stream, &response)
     }
 }
