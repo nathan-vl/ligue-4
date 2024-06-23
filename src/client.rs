@@ -86,7 +86,10 @@ impl Client {
                 board.print();
                 println!("Fim de jogo. Você perdeu.");
             }
-            Response::Draw { board: _ } => todo!(),
+            Response::Draw { board} => {
+                board.print();
+                println!("Fim de jogo. Foi um empate.");
+            },
         }
     }
 

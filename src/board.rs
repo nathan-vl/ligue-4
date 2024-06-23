@@ -44,6 +44,16 @@ impl Board {
         false
     }
 
+    pub fn check_tie(&self) -> bool {
+        for tile in &self.tiles[0] {
+            if tile.is_none() {
+                return false; 
+            }
+        }
+
+        true
+    }
+
     fn check_column(&self, tile: &Tile, column: usize) -> bool {
         const SLICE_SIZE: usize = 4;
         for y in 0..self.tiles[0].len() - SLICE_SIZE {
