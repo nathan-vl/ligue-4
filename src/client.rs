@@ -11,11 +11,9 @@ pub struct Client {
 }
 
 impl Client {
-    pub fn new(server_ip: &str) -> Self {
-        Self {
-            stream: TcpStream::connect(format!("{server_ip}:{PORT}")).unwrap(),
-            tile: None,
-        }
+    pub fn new(server_ip: &str) -> Result<Self> {
+        let stream = TcpStream::connect(format!("{server_ip}:{PORT}"))?;
+        Ok(Self { stream, tile: None })
     }
 
     pub fn join_game(&mut self) {
