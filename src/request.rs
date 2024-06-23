@@ -2,6 +2,6 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub enum Request {
-    NewPlayer,
+    NewPlayer { name: String },
     Play { column: u8 },
 }

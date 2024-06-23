@@ -1,23 +1,40 @@
 use std::{
     io::{stdin, stdout, Result, Write},
     net::TcpStream,
+    process::exit,
 };
 
-use crate::{request::Request, response::Response, server::PORT, tile::Tile, utils};
+use crate::{request::Request, response::Response, server::PORT, utils};
 
 pub struct Client {
     stream: TcpStream,
-    tile: Option<Tile>,
+    player_name: String,
 }
 
 impl Client {
-    pub fn new(server_ip: &str) -> Result<Self> {
-        let stream = TcpStream::connect(format!("{server_ip}:{PORT}"))?;
-        Ok(Self { stream, tile: None })
+    pub fn new(player_name: String, server_ip: &str) -> Self {
+        let stream = TcpStream::connect(format!("{server_ip}:{PORT}"));
+        match stream {
+            Ok(stream) => Self {
+                stream,
+                player_name,
+            },
+            Err(e) => {
+                if e.kind() == std::io::ErrorKind::ConnectionRefused {
+                    println!("Não foi possível se conectar ao servidor.");
+                    exit(-1);
+                } else {
+                    panic!("{e}");
+                }
+            }
+        }
     }
 
     pub fn join_game(&mut self) {
-        self.send_request(Request::NewPlayer).unwrap();
+        self.send_request(Request::NewPlayer {
+            name: self.player_name.clone(),
+        })
+        .unwrap();
         let response = self.read_response().unwrap();
         self.handle_response(&response);
     }
@@ -50,7 +67,6 @@ impl Client {
         match response {
             Response::CreatedRoom => {
                 println!("Sala criada. Aguardando outro jogador.");
-                self.tile = Some(Tile::Player1);
 
                 // Aguardando jogador 2
                 let response = self.read_response().unwrap();
@@ -61,7 +77,6 @@ impl Client {
                     "Entrou na sala. Você é o jogador {}.",
                     player_tile.to_number()
                 );
-                self.tile = Some(Tile::Player2);
             }
             Response::AnotherPlayerJoinedRoom { player_tile } => {
                 println!(

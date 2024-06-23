@@ -152,7 +152,9 @@ impl Server {
             let request = Server::read_request(&mut stream).unwrap();
 
             match request {
-                Request::NewPlayer => Server::handle_new_player(stream, &mut self.rooms),
+                Request::NewPlayer { name: _ } => {
+                    Server::handle_new_player(stream, &mut self.rooms)
+                }
                 _ => Server::send_response(
                     &mut stream,
                     Response::InvalidRequest {
