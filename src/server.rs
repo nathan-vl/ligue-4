@@ -98,8 +98,7 @@ impl Server {
                 },
                 Err(e) => {
                     if e.kind() == std::io::ErrorKind::UnexpectedEof {
-                        Server::send_response(other_player, Response::OtherPlayerDisconnected)
-                            .unwrap();
+                        _ = Server::send_response(other_player, Response::OtherPlayerDisconnected);
                         return;
                     }
                 }

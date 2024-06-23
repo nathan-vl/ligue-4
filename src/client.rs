@@ -18,20 +18,30 @@ impl Client {
 
     pub fn join_game(&mut self) {
         self.send_request(Request::NewPlayer).unwrap();
-        let response = self.read_response();
+        let response = self.read_response().unwrap();
         self.handle_response(&response);
     }
 
     pub fn play(&mut self) {
         'game: loop {
             let response = self.read_response();
-            self.handle_response(&response);
-
             match response {
-                Response::PlayerWin { board: _ }
-                | Response::PlayerLost { board: _ }
-                | Response::OtherPlayerDisconnected => break 'game,
-                _ => {}
+                Ok(response) => {
+                    self.handle_response(&response);
+
+                    match response {
+                        Response::PlayerWin { board: _ }
+                        | Response::PlayerLost { board: _ }
+                        | Response::OtherPlayerDisconnected => break 'game,
+                        _ => {}
+                    }
+                }
+                Err(e) => {
+                    if e.kind() == std::io::ErrorKind::UnexpectedEof {
+                        println!("A conexão com o servidor foi perdida");
+                        break 'game;
+                    }
+                }
             }
         }
     }
@@ -43,7 +53,7 @@ impl Client {
                 self.tile = Some(Tile::Player1);
 
                 // Aguardando jogador 2
-                let response = self.read_response();
+                let response = self.read_response().unwrap();
                 self.handle_response(&response);
             }
             Response::JoinedRoom { player_tile } => {
@@ -101,7 +111,7 @@ impl Client {
         utils::send(&mut self.stream, &request)
     }
 
-    fn read_response(&mut self) -> Response {
-        utils::read(&mut self.stream).unwrap()
+    fn read_response(&mut self) -> Result<Response> {
+        utils::read(&mut self.stream)
     }
 }
