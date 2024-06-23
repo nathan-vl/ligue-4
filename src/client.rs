@@ -49,6 +49,7 @@ impl Client {
                     match response {
                         Response::PlayerWin { board: _ }
                         | Response::PlayerLost { board: _ }
+                        | Response::Draw { board: _ }
                         | Response::OtherPlayerDisconnected => break 'game,
                         _ => {}
                     }
@@ -67,6 +68,24 @@ impl Client {
         match response {
             Response::CreatedRoom => {
                 println!("Sala criada. Aguardando outro jogador.");
+<<<<<<< Updated upstream
+=======
+                println!("");
+                println!("┼───────────────────────────────────────────────┼");
+                println!("│            Você é o criador da sala,          │");
+                println!("│       por favor, aguarde um jogador           │");
+                println!("│           para começar a partida              │");
+                println!("┼───────────────────────────────────────────────┼");
+                
+                println!("");
+                println!("═════════════════════════════════════════════════");
+                println!("              Aguardando jogador...              ");
+                println!("═════════════════════════════════════════════════");
+                
+                println!("");
+
+                //self.tile = Some(Tile::Player1);
+>>>>>>> Stashed changes
 
                 // Aguardando jogador 2
                 let response = self.read_response().unwrap();
@@ -77,12 +96,17 @@ impl Client {
                     "Entrou na sala. Você é o jogador {}.",
                     player_tile.to_number()
                 );
+<<<<<<< Updated upstream
+=======
+                self.tile = Some(*player_tile);
+>>>>>>> Stashed changes
             }
             Response::AnotherPlayerJoinedRoom { player_tile } => {
                 println!(
                     "Outro jogador entrou na sala. Você é o jogador {}.",
                     player_tile.to_number()
                 );
+                self.tile = Some(*player_tile);
             }
             Response::AskTurn { board } => {
                 board.print();
