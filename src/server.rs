@@ -4,6 +4,8 @@ use std::{
     thread,
 };
 
+use rand::Rng;
+
 use crate::{
     game::Game,
     game_room::GameRoom,
@@ -31,6 +33,12 @@ impl Server {
 
     fn handle_game(mut player1: TcpStream, mut player2: TcpStream) {
         let mut game = Game::new();
+        
+        let mut rng = rand::thread_rng();
+        let decide_starting_player: u8 = rng.gen_range(1..3);
+        if decide_starting_player == 2 {
+            game.current_player = Tile::Player2;
+        }
 
         loop {
             let (current_player, other_player) = if game.current_player == Tile::Player1 {
@@ -38,6 +46,7 @@ impl Server {
             } else {
                 (&mut player2, &mut player1)
             };
+
 
             Server::send_response(
                 other_player,
