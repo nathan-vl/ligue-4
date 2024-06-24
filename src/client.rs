@@ -68,19 +68,19 @@ impl Client {
         match response {
             Response::CreatedRoom => {
                 println!("Sala criada. Aguardando outro jogador.");
-                println!("");
+                println!();
                 println!("┼───────────────────────────────────────────────┼");
                 println!("│            Você é o criador da sala,          │");
                 println!("│       por favor, aguarde um jogador           │");
                 println!("│           para começar a partida              │");
                 println!("┼───────────────────────────────────────────────┼");
                 
-                println!("");
+                println!();
                 println!("═════════════════════════════════════════════════");
                 println!("              Aguardando jogador...              ");
                 println!("═════════════════════════════════════════════════");
                 
-                println!("");
+                println!();
 
                 // Aguardando jogador 2
                 let response = self.read_response().unwrap();
