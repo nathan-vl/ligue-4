@@ -22,7 +22,7 @@ fn read_line(question: String) -> String {
 
     let mut s = String::new();
     stdin().read_line(&mut s).unwrap();
-    s
+    s.trim().to_string()
 }
 
 fn read_input_range_inclusive<T>(range_start: T, range_end: T) -> T
