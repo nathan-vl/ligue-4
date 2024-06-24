@@ -2,6 +2,7 @@ mod board;
 mod client;
 mod game;
 mod game_room;
+mod player;
 mod request;
 mod response;
 mod server;
@@ -58,7 +59,6 @@ fn no_args_init() {
         let ip = read_line("Informe o IP do servidor: ".to_owned());
 
         let mut client = Client::new(name, &ip);
-        client.join_game();
         client.play();
     } else {
         let mut server = Server::new();
@@ -80,13 +80,12 @@ fn main() {
     } else if args.len() == 2 && args[1] == "server" {
         let mut server = Server::new();
         server.listen();
-    } else {
-        // TODO: Ler nome e ip do servidor da linha de comando
-        let mut client = Client::new("Fulano".to_owned(), "127.0.0.1");
-        client.join_game();
+    } else if args.len() == 4 && args[1] == "client" {
+        let player_name = &args[2];
+        let server_ip = &args[3];
+        let mut client = Client::new(player_name.to_string(), server_ip);
         client.play();
-        return;
+    } else {
+        println!("{USAGE}");
     }
-
-    print!("{USAGE}");
 }

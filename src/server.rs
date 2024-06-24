@@ -7,12 +7,8 @@ use std::{
 use rand::Rng;
 
 use crate::{
-    game::Game,
-    game_room::GameRoom,
-    request::Request,
-    response::Response,
-    tile::Tile,
-    utils::{self},
+    game::Game, game_room::GameRoom, player::Player, request::Request, response::Response,
+    tile::Tile, utils,
 };
 
 pub const PORT: u16 = 6010;
@@ -33,7 +29,7 @@ impl Server {
 
     fn handle_game(mut player1: TcpStream, mut player2: TcpStream) {
         let mut game = Game::new();
-        
+
         let mut rng = rand::thread_rng();
         let decide_starting_player: u8 = rng.gen_range(1..3);
         if decide_starting_player == 2 {
@@ -46,7 +42,6 @@ impl Server {
             } else {
                 (&mut player2, &mut player1)
             };
-
 
             Server::send_response(
                 other_player,
@@ -117,35 +112,37 @@ impl Server {
         }
     }
 
-    fn handle_new_player(mut stream: TcpStream, rooms: &mut Vec<GameRoom>) {
+    fn handle_new_player(mut player: Player, rooms: &mut Vec<GameRoom>) {
         let available_room = GameRoom::first_available_room(rooms);
         match available_room {
             Some(mut room) => {
-                room.player2 = Some(stream);
+                room.player2 = Some(player);
                 room.game = Some(Game::new());
 
                 Server::send_response(
-                    &mut room.player1,
+                    &mut room.player1.stream,
                     Response::AnotherPlayerJoinedRoom {
                         player_tile: Tile::Player1,
+                        another_player_name: room.player2.as_mut().unwrap().name.clone(),
                     },
                 )
                 .unwrap();
                 Server::send_response(
-                    room.player2.as_mut().unwrap(),
+                    &mut room.player2.as_mut().unwrap().stream,
                     Response::JoinedRoom {
                         player_tile: Tile::Player2,
+                        other_player_name: room.player1.name,
                     },
                 )
                 .unwrap();
 
                 thread::spawn(|| {
-                    Server::handle_game(room.player1, room.player2.unwrap());
+                    Server::handle_game(room.player1.stream, room.player2.unwrap().stream);
                 });
             }
             None => {
-                Server::send_response(&mut stream, Response::CreatedRoom).unwrap();
-                let room = GameRoom::new(stream);
+                Server::send_response(&mut player.stream, Response::CreatedRoom).unwrap();
+                let room = GameRoom::new(player);
                 rooms.push(room);
             }
         }
@@ -161,8 +158,8 @@ impl Server {
             let request = Server::read_request(&mut stream).unwrap();
 
             match request {
-                Request::NewPlayer { name: _ } => {
-                    Server::handle_new_player(stream, &mut self.rooms)
+                Request::NewPlayer { name } => {
+                    Server::handle_new_player(Player::new(name, stream), &mut self.rooms);
                 }
                 _ => Server::send_response(
                     &mut stream,

@@ -30,16 +30,14 @@ impl Client {
         }
     }
 
-    pub fn join_game(&mut self) {
+    pub fn play(&mut self) {
         self.send_request(Request::NewPlayer {
             name: self.player_name.clone(),
         })
         .unwrap();
         let response = self.read_response().unwrap();
         self.handle_response(&response);
-    }
 
-    pub fn play(&mut self) {
         'game: loop {
             let response = self.read_response();
             match response {
@@ -74,27 +72,33 @@ impl Client {
                 println!("│       por favor, aguarde um jogador           │");
                 println!("│           para começar a partida              │");
                 println!("┼───────────────────────────────────────────────┼");
-                
+
                 println!();
                 println!("═════════════════════════════════════════════════");
                 println!("              Aguardando jogador...              ");
                 println!("═════════════════════════════════════════════════");
-                
+
                 println!();
 
                 // Aguardando jogador 2
                 let response = self.read_response().unwrap();
                 self.handle_response(&response);
             }
-            Response::JoinedRoom { player_tile } => {
+            Response::JoinedRoom {
+                player_tile,
+                other_player_name,
+            } => {
                 println!(
-                    "Entrou na sala. Você é o jogador {}.",
+                    "Você entrou na sala de {other_player_name}. Você é o jogador {}.",
                     player_tile.to_number()
                 );
             }
-            Response::AnotherPlayerJoinedRoom { player_tile } => {
+            Response::AnotherPlayerJoinedRoom {
+                player_tile,
+                another_player_name,
+            } => {
                 println!(
-                    "Outro jogador entrou na sala. Você é o jogador {}.",
+                    "{another_player_name} entrou na sala. Você é o jogador {}.",
                     player_tile.to_number()
                 );
             }

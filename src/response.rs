@@ -7,16 +7,34 @@ use crate::{board::Board, tile::Tile};
 pub enum Response {
     CreatedRoom,
 
-    JoinedRoom { player_tile: Tile },
-    AnotherPlayerJoinedRoom { player_tile: Tile },
+    JoinedRoom {
+        player_tile: Tile,
+        other_player_name: String,
+    },
+    AnotherPlayerJoinedRoom {
+        player_tile: Tile,
+        another_player_name: String,
+    },
 
-    AskTurn { board: Board },
-    AnotherPlayerTurn { board: Board },
+    AskTurn {
+        board: Board,
+    },
+    AnotherPlayerTurn {
+        board: Board,
+    },
 
-    PlayerWin { board: Board },
-    PlayerLost { board: Board },
-    Draw { board: Board },
+    PlayerWin {
+        board: Board,
+    },
+    PlayerLost {
+        board: Board,
+    },
+    Draw {
+        board: Board,
+    },
 
     OtherPlayerDisconnected,
-    InvalidRequest { message: String },
+    InvalidRequest {
+        message: String,
+    },
 }
