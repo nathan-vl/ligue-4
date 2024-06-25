@@ -45,10 +45,10 @@ impl Client {
                     self.handle_response(&response);
 
                     match response {
-                        Response::PlayerWin { board: _ }
+                        /*Response::PlayerWin { board: _ }
                         | Response::PlayerLost { board: _ }
                         | Response::Draw { board: _ }
-                        | Response::OtherPlayerDisconnected => break 'game,
+                        | */Response::OtherPlayerDisconnected => break 'game,
                         _ => {}
                     }
                 }
@@ -69,8 +69,8 @@ impl Client {
                 println!();
                 println!("┼───────────────────────────────────────────────┼");
                 println!("│            Você é o criador da sala,          │");
-                println!("│       por favor, aguarde um jogador           │");
-                println!("│           para começar a partida              │");
+                println!("│         por favor, aguarde um jogador         │");
+                println!("│             para começar a partida            │");
                 println!("┼───────────────────────────────────────────────┼");
 
                 println!();
@@ -110,7 +110,14 @@ impl Client {
 
                 let mut s = String::new();
                 stdin().read_line(&mut s).unwrap();
-                let col = s.trim().parse::<i32>().unwrap() - 1;
+                let col = match s.trim().parse::<i32>() {
+                    Ok(num) => num - 1,
+                    Err(_) => {
+                        println!("Entrada inválida!");
+                        return;
+                    }
+                };
+                
 
                 self.send_request(Request::Play { column: col as u8 })
                     .unwrap();
@@ -136,6 +143,22 @@ impl Client {
             }
             Response::OtherPlayerDisconnected => {
                 println!("O outro jogador saiu da sala.");
+            }
+            Response::Rematch => {
+                println!();
+                println!("Você deseja uma revanche?");
+                println!("Digite: ");
+                println!("- [S] para Sim");
+                println!("- Qualquer outra tecla para Não");
+                let _ = stdout().flush();
+
+                let mut s = String::new();
+                stdin().read_line(&mut s).unwrap();
+                let s = s.trim().to_string();
+
+                self.send_request(Request::Rematch { accept: s as String })
+                    .unwrap();
+
             }
         }
     }

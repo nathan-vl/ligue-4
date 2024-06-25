@@ -49,9 +49,22 @@ where
 }
 
 fn no_args_init() {
-    println!("Bem-vindo (a) ao ligue 4. Por favor, escolha uma opção");
-    println!("1. Jogar");
-    println!("2. Iniciar um servidor");
+    println!("╔══════════════════════════════════════════════╗");
+    println!("║            Bem Vindo ao Ligue 4!             ║");
+    println!("╚══════════════════════════════════════════════╝");
+    
+    println!("                ╔═════════════╗");
+    println!("                ║X O X O X O X║");
+    println!("                ║O X O X O X O║");
+    println!("                ║X O X O X O X║");
+    println!("                ║O X O X O X O║");
+    println!("                ║X O X O X O X║");
+    println!("                ║O X O X O X O║");
+    println!("                ╚═════════════╝");
+    println!();
+    println!("Pressione: ");
+    println!("[1] - para Jogar");
+    println!("[2] - para Iniciar um Servidor ");
 
     let option = read_input_range_inclusive(1, 2);
     if option == 1 {

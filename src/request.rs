@@ -4,4 +4,5 @@ use serde::{Deserialize, Serialize};
 pub enum Request {
     NewPlayer { name: String },
     Play { column: u8 },
+    Rematch { accept: String },
 }
