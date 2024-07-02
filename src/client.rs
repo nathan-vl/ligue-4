@@ -44,12 +44,8 @@ impl Client {
                 Ok(response) => {
                     self.handle_response(&response);
 
-                    match response {
-                        /*Response::PlayerWin { board: _ }
-                        | Response::PlayerLost { board: _ }
-                        | Response::Draw { board: _ }
-                        | */Response::OtherPlayerDisconnected => break 'game,
-                        _ => {}
+                    if let Response::OtherPlayerDisconnected = response {
+                        break 'game;
                     }
                 }
                 Err(e) => {
@@ -117,7 +113,6 @@ impl Client {
                         return;
                     }
                 };
-                
 
                 self.send_request(Request::Play { column: col as u8 })
                     .unwrap();
@@ -156,9 +151,7 @@ impl Client {
                 stdin().read_line(&mut s).unwrap();
                 let s = s.trim().to_string();
 
-                self.send_request(Request::Rematch { accept: s as String })
-                    .unwrap();
-
+                self.send_request(Request::Rematch { accept: s }).unwrap();
             }
         }
     }
