@@ -99,7 +99,7 @@ impl Client {
                 );
             }
             Response::AskTurn { board } => {
-                board.print();
+                println!("{}", board);
 
                 print!("É a sua vez, escolha uma coluna de 1 a 7: ");
                 let _ = stdout().flush();
@@ -118,19 +118,19 @@ impl Client {
                     .unwrap();
             }
             Response::AnotherPlayerTurn { board } => {
-                board.print();
+                println!("{}", board);
                 println!("Aguardando o outro jogador");
             }
             Response::PlayerWin { board } => {
-                board.print();
+                println!("{}", board);
                 println!("Fim de jogo. Você ganhou.");
             }
             Response::PlayerLost { board } => {
-                board.print();
+                println!("{}", board);
                 println!("Fim de jogo. Você perdeu.");
             }
             Response::Draw { board } => {
-                board.print();
+                println!("{}", board);
                 println!("Fim de jogo. Foi um empate.");
             }
             Response::InvalidRequest { message } => {
