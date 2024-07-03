@@ -111,7 +111,7 @@ impl Board {
     pub fn is_column_full(&self, column: usize) -> bool {
         !self.tiles[0][column].is_none()
     }
-
+}
 impl fmt::Display for Board {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "-")?;
