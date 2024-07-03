@@ -102,6 +102,16 @@ impl Board {
         false
     }
 
+    // Verifica se uma coluna está dentro do alcance do tabuleiro.
+    pub fn is_column_within_bounds(&self, column: usize) -> bool {
+        column < self.tiles[0].len()
+    }
+
+    // Verifica se uma coluna está cheia, ou seja, se a célula superior está ocupada.
+    pub fn is_column_full(&self, column: usize) -> bool {
+        !self.tiles[0][column].is_none()
+    }
+
     pub fn print(&self) {
         print!("-");
         for i in 0..self.tiles[0].len() {

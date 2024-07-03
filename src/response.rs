@@ -37,5 +37,8 @@ pub enum Response {
     InvalidRequest {
         message: String,
     },
+    InvalidColumn {
+        message: String,
+    },
     Rematch,
 }

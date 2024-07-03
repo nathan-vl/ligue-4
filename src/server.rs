@@ -58,94 +58,113 @@ impl Server {
                 }
             }
 
-            Server::send_response(current_player, Response::AskTurn { board: game.board }).unwrap();
-            let current_player_request = Server::read_request(current_player);
+            let mut current_player_request;
+            let chosen_column: u8;
+            loop {
+                Server::send_response(
+                    current_player, 
+                    Response::AskTurn { board: game.board }
+                ).unwrap();
+                
+                current_player_request = match Server::read_request(current_player) {
+                    Ok(request) => request,
+                    Err(e) => {
+                        println!("Erro ao ler a solicitação do jogador: {:?}", e);
+                        continue;
+                    }
+                }; 
 
-            match current_player_request {
-                Ok(request) => match request {
-                    Request::Play { column } => {
-                        if let Some(tile_pos) =
-                            game.board.place_tile(column as usize, &game.current_player)
-                        {
-                            if game
-                                .board
-                                .check_win(&game.current_player, tile_pos.0, tile_pos.1)
-                            {
-                                Self::send_response(
-                                    current_player,
-                                    Response::PlayerWin { board: game.board },
-                                )
-                                .unwrap();
-                                Self::send_response(
-                                    other_player,
-                                    Response::PlayerLost { board: game.board },
-                                )
-                                .unwrap();
-
-                                // Verificar se os jogadores querem revanche
-                                match Server::check_for_rematch(current_player, other_player) {
-                                    Ok(wants_rematch) => {
-                                        if wants_rematch {
-                                            rematch = true;
-                                            break;
-                                        } else {
-                                            println!("Pelo menos um dos jogadores não quis revanche");
-                                            _ = player1.shutdown(Shutdown::Both);
-                                            _ = player2.shutdown(Shutdown::Both);
-                                            println!("Jogo acabou");
-                                            return;
-                                        }
-                                    }
-                                    Err(e) => {
-                                        println!("Erro ao verificar revanche: {:?}", e);
-                                        return;
-                                    }
-                                }                          
-                            } else if game.board.check_tie() {
-                                Self::send_response(
-                                    current_player,
-                                    Response::Draw { board: game.board },
-                                )
-                                .unwrap();
-                                Self::send_response(
-                                    other_player,
-                                    Response::Draw { board: game.board },
-                                )
-                                .unwrap();
-
-                                // Verificar se os jogadores querem revanche
-                                match Server::check_for_rematch(current_player, other_player) {
-                                    Ok(wants_rematch) => {
-                                        if wants_rematch {
-                                            rematch = true;
-                                            break;
-                                        } else {
-                                            println!("Pelo menos um dos jogadores não quis revanche");
-                                            _ = player1.shutdown(Shutdown::Both);
-                                            _ = player2.shutdown(Shutdown::Both);
-                                            println!("Jogo acabou");
-                                            return;
-                                        }
-                                    }
-                                    Err(e) => {
-                                        println!("Erro ao verificar revanche: {:?}", e);
-                                        return;
-                                    }
-                                } 
-                            }
+                if let Request::Play { column } = current_player_request {
+                    if game.board.is_column_within_bounds(column.into()) {
+                        if !game.board.is_column_full(column.into()) {
+                            chosen_column = column;
+                            break;
                         } else {
-                            panic!("Invalid position");
+                            Server::send_response(current_player, Response::InvalidColumn {
+                                message: "Coluna cheia. Escolha outra.".to_owned(),
+                            }).unwrap();
                         }
+                    } else {
+                        Server::send_response(current_player, Response::InvalidColumn {
+                            message: "Escolha uma coluna de 1 a 7.".to_owned(),
+                        }).unwrap();
                     }
-                    _ => panic!("Requisição inválida"),
-                },
-                Err(e) => {
-                    if e.kind() == std::io::ErrorKind::UnexpectedEof {
-                        _ = Server::send_response(other_player, Response::OtherPlayerDisconnected);
-                        return;
-                    }
+                } else {
+                    Server::send_response(current_player, Response::InvalidRequest {
+                        message: "Apenas a solicitação Play é válida. Tente novamente.".to_owned(),
+                    }).unwrap();
                 }
-            };
+            }
+
+            if let Some(tile_pos) =
+            game.board.place_tile(chosen_column as usize, &game.current_player)
+            {
+                if game
+                    .board
+                    .check_win(&game.current_player, tile_pos.0, tile_pos.1)
+                {
+                    Self::send_response(
+                        current_player,
+                        Response::PlayerWin { board: game.board },
+                    )
+                    .unwrap();
+                    Self::send_response(
+                        other_player,
+                        Response::PlayerLost { board: game.board },
+                    )
+                    .unwrap();
+
+                    match Server::check_for_rematch(current_player, other_player) {
+                        Ok(wants_rematch) => {
+                            if wants_rematch {
+                                rematch = true;
+                            } else {
+                                println!("Pelo menos um dos jogadores não quis revanche");
+                                _ = player1.shutdown(Shutdown::Both);
+                                _ = player2.shutdown(Shutdown::Both);
+                                println!("Jogo acabou");
+                                return;
+                            }
+                        }
+                        Err(e) => {
+                            println!("Erro ao verificar revanche: {:?}", e);
+                            return;
+                        }
+                    }                          
+                } else if game.board.check_tie() {
+                    Self::send_response(
+                        current_player,
+                        Response::Draw { board: game.board },
+                    )
+                    .unwrap();
+                    Self::send_response(
+                        other_player,
+                        Response::Draw { board: game.board },
+                    )
+                    .unwrap();
+
+                    match Server::check_for_rematch(current_player, other_player) {
+                        Ok(wants_rematch) => {
+                            if wants_rematch {
+                                rematch = true;
+                            } else {
+                                println!("Pelo menos um dos jogadores não quis revanche");
+                                _ = player1.shutdown(Shutdown::Both);
+                                _ = player2.shutdown(Shutdown::Both);
+                                println!("Jogo acabou");
+                                return;
+                            }
+                        }
+                        Err(e) => {
+                            println!("Erro ao verificar revanche: {:?}", e);
+                            return;
+                        }
+                    } 
+                }
+            } else {
+                panic!("Invalid position");
+            }                            
+            
 
             game.current_player = game.current_player.opposite();
             if rematch{break}
@@ -214,12 +233,10 @@ impl Server {
     }
 
     fn check_for_rematch(player1: &mut TcpStream, player2: &mut TcpStream) -> io::Result<bool> {
-        // Envia solicitação de revanche para o player1
         if let Err(e) = Self::send_response(player1, Response::Rematch) {
             println!("Erro ao enviar resposta de revanche para o jogador 1: {:?}", e);
             return Err(e);
         }
-        // Lê resposta do player1
         let player1_response = Server::read_request(player1)?;
         let player1_rematch: bool = match player1_response{
             Request::Rematch { accept } => {
@@ -228,12 +245,10 @@ impl Server {
             _ => panic!("Resposta inválida do jogador 1"),
         };
 
-        // Envia solicitação de revanche para o player2
         if let Err(e) = Self::send_response(player2, Response::Rematch) {
             println!("Erro ao enviar resposta de revanche para o jogador 2: {:?}", e);
             return Err(e);
         }
-        // Lê resposta do player2
         let player2_response = Server::read_request(player2)?;
         let player2_rematch : bool = match player2_response {
             Request::Rematch { accept } => {
@@ -242,7 +257,6 @@ impl Server {
             _ => panic!("Resposta inválida do jogador 2"),
         };
 
-        // Verifica se ambos jogadores querem revanche
         if player1_rematch && player2_rematch {
             Ok(true)
         } else {

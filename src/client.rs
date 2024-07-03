@@ -105,21 +105,27 @@ impl Client {
             Response::AskTurn { board } => {
                 board.print();
 
-                print!("É a sua vez, escolha uma coluna de 1 a 7: ");
-                let _ = stdout().flush();
+                let chosen_col: i32;
 
-                let mut s = String::new();
-                stdin().read_line(&mut s).unwrap();
-                let col = match s.trim().parse::<i32>() {
-                    Ok(num) => num - 1,
-                    Err(_) => {
-                        println!("Entrada inválida!");
-                        return;
-                    }
-                };
-                
+                loop {
+                    print!("É a sua vez, escolha uma coluna de 1 a 7: ");
+                    let _ = stdout().flush();   
 
-                self.send_request(Request::Play { column: col as u8 })
+                    let mut s = String::new();
+                    stdin().read_line(&mut s).unwrap();
+                    match s.trim().parse::<i32>() {
+                        Ok(num) => {
+                            chosen_col = num - 1;
+                            break;
+                        }
+                        Err(_) => {
+                            println!("Entrada inválida!");
+                            continue;
+                        }
+                    };
+                }
+
+                self.send_request(Request::Play { column: chosen_col as u8 })
                     .unwrap();
             }
             Response::AnotherPlayerTurn { board } => {
@@ -140,6 +146,9 @@ impl Client {
             }
             Response::InvalidRequest { message } => {
                 println!("Requisição inválida: {message}");
+            }
+            Response::InvalidColumn { message } => {
+                println!("Coluna inválida: {message}");
             }
             Response::OtherPlayerDisconnected => {
                 println!("O outro jogador saiu da sala.");
