@@ -60,18 +60,16 @@ impl Server {
             let mut current_player_request;
             let chosen_column: u8;
             loop {
-                Server::send_response(
-                    current_player, 
-                    Response::AskTurn { board: game.board }
-                ).unwrap();
-                
+                Server::send_response(current_player, Response::AskTurn { board: game.board })
+                    .unwrap();
+
                 current_player_request = match Server::read_request(current_player) {
                     Ok(request) => request,
                     Err(e) => {
                         println!("Erro ao ler a solicitação do jogador: {:?}", e);
                         continue;
                     }
-                }; 
+                };
 
                 if let Request::Play { column } = current_player_request {
                     if game.board.is_column_within_bounds(column.into()) {
@@ -79,39 +77,47 @@ impl Server {
                             chosen_column = column;
                             break;
                         } else {
-                            Server::send_response(current_player, Response::InvalidColumn {
-                                message: "Coluna cheia. Escolha outra.".to_owned(),
-                            }).unwrap();
+                            Server::send_response(
+                                current_player,
+                                Response::InvalidColumn {
+                                    message: "Coluna cheia. Escolha outra.".to_owned(),
+                                },
+                            )
+                            .unwrap();
                         }
                     } else {
-                        Server::send_response(current_player, Response::InvalidColumn {
-                            message: "Escolha uma coluna de 1 a 7.".to_owned(),
-                        }).unwrap();
+                        Server::send_response(
+                            current_player,
+                            Response::InvalidColumn {
+                                message: "Escolha uma coluna de 1 a 7.".to_owned(),
+                            },
+                        )
+                        .unwrap();
                     }
                 } else {
-                    Server::send_response(current_player, Response::InvalidRequest {
-                        message: "Apenas a solicitação Play é válida. Tente novamente.".to_owned(),
-                    }).unwrap();
+                    Server::send_response(
+                        current_player,
+                        Response::InvalidRequest {
+                            message: "Apenas a solicitação Play é válida. Tente novamente."
+                                .to_owned(),
+                        },
+                    )
+                    .unwrap();
                 }
             }
 
-            if let Some(tile_pos) =
-            game.board.place_tile(chosen_column as usize, &game.current_player)
+            if let Some(tile_pos) = game
+                .board
+                .place_tile(chosen_column as usize, &game.current_player)
             {
                 if game
                     .board
                     .check_win(&game.current_player, tile_pos.0, tile_pos.1)
                 {
-                    Self::send_response(
-                        current_player,
-                        Response::PlayerWin { board: game.board },
-                    )
-                    .unwrap();
-                    Self::send_response(
-                        other_player,
-                        Response::PlayerLost { board: game.board },
-                    )
-                    .unwrap();
+                    Self::send_response(current_player, Response::PlayerWin { board: game.board })
+                        .unwrap();
+                    Self::send_response(other_player, Response::PlayerLost { board: game.board })
+                        .unwrap();
 
                     match Server::check_for_rematch(current_player, other_player) {
                         Ok(wants_rematch) => {
@@ -129,18 +135,12 @@ impl Server {
                             println!("Erro ao verificar revanche: {:?}", e);
                             return;
                         }
-                    }                          
+                    }
                 } else if game.board.check_tie() {
-                    Self::send_response(
-                        current_player,
-                        Response::Draw { board: game.board },
-                    )
-                    .unwrap();
-                    Self::send_response(
-                        other_player,
-                        Response::Draw { board: game.board },
-                    )
-                    .unwrap();
+                    Self::send_response(current_player, Response::Draw { board: game.board })
+                        .unwrap();
+                    Self::send_response(other_player, Response::Draw { board: game.board })
+                        .unwrap();
 
                     match Server::check_for_rematch(current_player, other_player) {
                         Ok(wants_rematch) => {
@@ -158,12 +158,11 @@ impl Server {
                             println!("Erro ao verificar revanche: {:?}", e);
                             return;
                         }
-                    } 
+                    }
                 }
             } else {
                 panic!("Invalid position");
-            }                            
-            
+            }
 
             game.current_player = game.current_player.opposite();
             if rematch {

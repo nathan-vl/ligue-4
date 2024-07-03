@@ -109,7 +109,7 @@ impl Board {
     }
 
     pub fn is_column_full(&self, column: usize) -> bool {
-        !self.tiles[0][column].is_none()
+        self.tiles[0][column].is_some()
     }
 }
 impl fmt::Display for Board {

@@ -105,7 +105,7 @@ impl Client {
 
                 loop {
                     print!("É a sua vez, escolha uma coluna de 1 a 7: ");
-                    let _ = stdout().flush();   
+                    let _ = stdout().flush();
 
                     let mut s = String::new();
                     stdin().read_line(&mut s).unwrap();
@@ -121,8 +121,10 @@ impl Client {
                     };
                 }
 
-                self.send_request(Request::Play { column: chosen_col as u8 })
-                    .unwrap();
+                self.send_request(Request::Play {
+                    column: chosen_col as u8,
+                })
+                .unwrap();
             }
             Response::AnotherPlayerTurn { board } => {
                 println!("{}", board);
