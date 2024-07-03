@@ -52,7 +52,7 @@ fn no_args_init() {
     println!("╔══════════════════════════════════════════════╗");
     println!("║            Bem Vindo ao Ligue 4!             ║");
     println!("╚══════════════════════════════════════════════╝");
-    
+
     println!("                ╔═════════════╗");
     println!("                ║X O X O X O X║");
     println!("                ║O X O X O X O║");

@@ -44,12 +44,8 @@ impl Client {
                 Ok(response) => {
                     self.handle_response(&response);
 
-                    match response {
-                        /*Response::PlayerWin { board: _ }
-                        | Response::PlayerLost { board: _ }
-                        | Response::Draw { board: _ }
-                        | */Response::OtherPlayerDisconnected => break 'game,
-                        _ => {}
+                    if let Response::OtherPlayerDisconnected = response {
+                        break 'game;
                     }
                 }
                 Err(e) => {
@@ -103,7 +99,7 @@ impl Client {
                 );
             }
             Response::AskTurn { board } => {
-                board.print();
+                println!("{}", board);
 
                 let chosen_col: i32;
 
@@ -129,19 +125,19 @@ impl Client {
                     .unwrap();
             }
             Response::AnotherPlayerTurn { board } => {
-                board.print();
+                println!("{}", board);
                 println!("Aguardando o outro jogador");
             }
             Response::PlayerWin { board } => {
-                board.print();
+                println!("{}", board);
                 println!("Fim de jogo. Você ganhou.");
             }
             Response::PlayerLost { board } => {
-                board.print();
+                println!("{}", board);
                 println!("Fim de jogo. Você perdeu.");
             }
             Response::Draw { board } => {
-                board.print();
+                println!("{}", board);
                 println!("Fim de jogo. Foi um empate.");
             }
             Response::InvalidRequest { message } => {
@@ -165,9 +161,7 @@ impl Client {
                 stdin().read_line(&mut s).unwrap();
                 let s = s.trim().to_string();
 
-                self.send_request(Request::Rematch { accept: s as String })
-                    .unwrap();
-
+                self.send_request(Request::Rematch { accept: s }).unwrap();
             }
         }
     }

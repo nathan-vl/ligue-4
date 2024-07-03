@@ -1,3 +1,5 @@
+use std::fmt;
+
 use serde::{Deserialize, Serialize};
 
 use crate::tile::Tile;
@@ -102,45 +104,46 @@ impl Board {
         false
     }
 
-    // Verifica se uma coluna está dentro do alcance do tabuleiro.
     pub fn is_column_within_bounds(&self, column: usize) -> bool {
         column < self.tiles[0].len()
     }
 
-    // Verifica se uma coluna está cheia, ou seja, se a célula superior está ocupada.
     pub fn is_column_full(&self, column: usize) -> bool {
         !self.tiles[0][column].is_none()
     }
 
-    pub fn print(&self) {
-        print!("-");
+impl fmt::Display for Board {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "-")?;
         for i in 0..self.tiles[0].len() {
-            print!("{}", i + 1);
+            write!(f, "{}", i + 1)?;
         }
-        println!("-");
+        writeln!(f, "-")?;
 
-        print!("╔");
+        write!(f, "╔")?;
         for _ in 0..self.tiles[0].len() {
-            print!("═");
+            write!(f, "═")?;
         }
-        println!("╗");
+        writeln!(f, "╗")?;
 
         for row in self.tiles {
-            print!("║");
+            write!(f, "║")?;
             for tile in row {
                 if let Some(tile) = tile {
-                    print!("{}", tile);
+                    write!(f, "{}", tile)?;
                 } else {
-                    print!(" ");
+                    write!(f, " ")?;
                 }
             }
-            println!("║");
+            writeln!(f, "║")?;
         }
 
-        print!("╚");
+        write!(f, "╚")?;
         for _ in 0..self.tiles[0].len() {
-            print!("═");
+            write!(f, "═")?;
         }
-        println!("╝");
+        write!(f, "╝")?;
+
+        Ok(())
     }
 }
